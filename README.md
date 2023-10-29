@@ -9,11 +9,11 @@ Various licenses, see below.
 ## What these are
 
 These are demonstration tools showing how to connect the MOS/Commodore KIM-1
-single-board computer to a Matrix Orbital LK204-25 or compatible devices, which
-is a serial-addressable HD44780-style LCD display.
+single-board computer to a Matrix Orbital LK204-25, which is a
+serial-addressable HD44780-style LCD display, or a compatible device.
 
 To connect the LK to the KIM-1, you can use the built-in 20mA current loop
-terminal interface with a connector, but this project provides a software
+terminal interface with a converter, but this project provides a software
 output-only driver that fits into the free RRIOT RAM at $1780. To use it,
 connect the LK ground either to common ground or A-1 on the application
 connector, and A-14 either directly to the LK (if you're using the TTL 5V
