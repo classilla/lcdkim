@@ -1,0 +1,13 @@
+
+	* = $0000
+
+lup	lda `chr
+	cmp #97
+	bcc gosend
+	lda #65
+	sta `chr
+gosend	jsr $1780
+	inc `chr
+	jmp lup
+
+chr	.byt 65

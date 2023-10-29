@@ -1,0 +1,97 @@
+	* = $0000
+
+	ldy #0
+	sty `zpy
+strlup  ldy `zpy
+        lda (zp),y
+	cmp #$ff
+        beq strdun
+        jsr $1780	; trashes all registers
+        inc `zpy
+        bne strlup
+strdun  jmp strdun
+
+zp	.word ccharsq
+zpy	.byt $00
+
+	; install character sequences
+ccharsq
+	; block as character 0
+	.byt $fe, $4e, $00
+	.byt %00011111
+	.byt %00011111
+	.byt %00011111
+	.byt %00011111
+	.byt %00011111
+	.byt %00011111
+	.byt %00011111
+	.byt %00011111
+	; slash as character 1
+	.byt $fe, $4e, $01
+	.byt %00000001
+	.byt %00000011
+	.byt %00000011
+	.byt %00000111
+	.byt %00000111
+	.byt %00001111
+	.byt %00001111
+	.byt %00011111
+	; inverse slash as character 2
+	.byt $fe, $4e, $02
+	.byt %00011110
+	.byt %00011100
+	.byt %00011100
+	.byt %00011000
+	.byt %00011000
+	.byt %00010000
+	.byt %00010000
+	.byt %00000000
+	; slash 2 as character 3
+	.byt $fe, $4e, $03
+	.byt %00010000
+	.byt %00011000
+	.byt %00011000
+	.byt %00011100
+	.byt %00011100
+	.byt %00011110
+	.byt %00011110
+	.byt %00011111
+	; inverse slash 2 as character 4
+	.byt $fe, $4e, $04
+	.byt %00001111
+	.byt %00000111
+	.byt %00000111
+	.byt %00000011
+	.byt %00000011
+	.byt %00000001
+	.byt %00000001
+	.byt %00000000
+	; write out display
+
+/*
+----+----+----+----+
+  |// | |\/|   /|
+  |/  | |\/| - /|
+  |\  | |  |    |
+  |\\ | |  |   |||
+*/
+
+	.byt $fe, $58, $fe, $48, $fe, $52
+.byt $20, $20, $00, $01, $02, $20, $00, $20, $00, $03
+.byt $01, $00, $20, $20, $20, $01, $00, $20, $20, $20
+
+.byt $20, $20, $00, $02, $20, $20, $00, $20, $00, $04
+.byt $02, $00, $20, $2d, $20, $02, $00, $20, $20, $20
+
+.byt $20, $20, $00, $03, $20, $20, $00, $20, $00, $20
+.byt $20, $00, $20, $20, $20, $20, $00, $20, $20, $20
+
+.byt $20, $20, $00, $04, $03, $20, $00, $20, $00, $20
+.byt $20, $00, $20, $20, $20, $00, $00, $00, $20
+
+.byt $ff
+
+#ifdef XA_MAJOR
+.assert *<$f9, "too big for zero page"
+#endif
+

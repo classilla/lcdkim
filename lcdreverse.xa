@@ -1,0 +1,157 @@
+zpy	= $0d
+zp	= $0e
+pointr	= $10
+mod	= $11
+rnd	= $12
+window	= $18
+chrout	= $1780
+getkey	= $1f6a
+
+	; original game by Bob Albrecht, People's Computer Co.
+	; modified by Jim Butterfield, First Book of KIM, p101
+	; upgraded for LK LCD driver by Cameron Kaiser
+	; freely distributable
+
+	* = $0200
+
+	cld
+	ldx #<hello
+	ldy #>hello
+	jsr strout
+debouns	jsr getkey
+	cmp #$15
+	bcc debouns
+start	inc rnd+4
+	jsr getkey
+	cmp #$15
+	bcs start
+
+	ldx #5
+	lda #0
+	stx pointr
+zloop	sta window,x	; set window to zeroes
+	dex
+	bpl zloop
+rand	sec
+	lda rnd+1	; hash in new random number
+	adc rnd+4
+	adc rnd+5
+	sta rnd
+	ldx #4
+rlp	lda rnd,x	; move random string down one
+	sta rnd+1,x
+	dex
+	bpl rlp
+	ldy #$c0	; divide random # by 6
+	sty mod
+	ldy #6
+set	cmp mod
+	bcc pass
+	sbc mod
+pass	lsr mod
+	dey
+	bne set
+	tax
+	ldy pointr
+	lda table,y	; letters A to F
+top	dex
+	bpl try		; find an empty window
+	ldx #5
+try	ldy window,x
+	bne top
+	sta window,x	; and put the letter in
+	dec pointr
+	bpl rand
+slink	beq start	; link to start
+	jsr show
+
+play	jsr getkey
+	cmp #$15	; no key?
+	beq play	; yes, wait
+	cmp #$13	; GO key?
+	beq slink	; yes, restart
+	tax		; keys 1 to 6?
+	beq play	; no, continue to wait
+	dex		; keys 2 to 6 (i.e. 1 to 5)?
+	beq play	; no, continue to wait
+	cpx pointr	; same key as before?
+	beq play	; yes, ignore
+	stx pointr	; no, we've got a live one
+top1	lda window,x
+	pha		; roll 'em out...
+	dex
+	bpl top1
+	ldx pointr
+top2	pla		; roll 'em back in
+	sta window,x
+	dex
+	bpl top2
+	jsr show
+	
+wtest	ldx #5		; test win condition
+test2	lda window,x
+	cmp table,x
+	bne play
+	dex
+	bpl test2
+	ldx #5
+	lda #"-"	; set to ------
+set1	sta window,x
+	dex
+	bpl set1
+	jsr show
+	jmp play
+	
+
+	; take a null terminated string pointed to by x/y and
+	; emit it to the LCD
+strout	lda #0
+	sta zpy
+	stx zp
+	sty zp+1
+strlup	ldy zpy
+	lda (zp),y
+	beq strdun
+	jsr chrout	; trashes all registers
+	inc zpy
+	bne strlup
+strdun	rts
+
+	; show current game display
+show	; print to screen
+	ldx #<scroll
+	ldy #>scroll
+	jsr strout
+	lda #0
+	sta zpy
+wnout	ldy zpy
+	lda window,y
+	jsr chrout
+	inc zpy
+	lda zpy
+	cmp #6
+	bne wnout
+	rts
+
+	; both winner table and letter table
+table	.asc "ABCDEF"
+
+	; set screen to auto scroll, auto wrap, no cursor and clear
+hello	.asc $fe, $58, $fe, $43, $fe, $4b, $fe, $54, $fe, $48, $fe, $51
+	.asc $0d, $0a
+	;     --------------------
+	.asc "      RE-VERSE",      $0d, $0a
+	.asc " press key to start", $0d, $0a, $00
+#ifdef XA_MINOR
+.assert *-hello < 256, "intro text too long"
+#endif
+
+	; force screen to scroll, then
+scroll	.asc $fe, 71, 20, 4, $20
+	; padding to center on screen
+	.asc $20, $20, $20, $20, $20, $20, $20, $00
+
+#ifdef XA_MINOR
+.assert *<$0401, "too big to fit, too old to die"
+#endif
+
